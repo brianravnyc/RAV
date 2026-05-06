@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Burn-up Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #f5f5f5;
+            padding: 2rem 1rem;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 28px;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            color: #1a1a1a;
+        }
+        
+        .upload-section {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .upload-section h2 {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+        
+        .upload-fields {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        
+        .upload-field {
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .upload-field label {
+            font-size: 13px;
+            color: #666;
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .upload-field input[type="file"] {
+            font-size: 13px;
+            width: 100%;
+        }
+        
+        .upload-field small {
+            font-size: 11px;
+            color: #999;
+            display: block;
+            margin-top: 0.5rem;
+        }
+        
+        .message {
+            font-size: 13px;
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 4px;
+        }
+        
+        .message.success {
+            background: #f0f8f0;
+            color: #27ae60;
+            border-left: 3px solid #27ae60;
+        }
+        
+        .message.warning {
+            background: #fff8f0;
+            color: #f39c12;
+            border-left: 3px solid #f39c12;
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 2rem;
+        }
+        
+        .summary-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .summary-card p:first-child {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .summary-card p:last-child {
+            font-size: 24px;
+            font-weight: 500;
+            margin: 0;
+            color: #1a1a1a;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .tab-button {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .tab-button.active {
+            background: white;
+            border: 1px solid #e0e0e0;
+            color: #1a1a1a;
+        }
+        
+        .tab-button:hover {
+            background: #f9f9f9;
+        }
+        
+        .section {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .section-header h2 {
+            font-size: 16px;
+            font-weight: 500;
+            margin: 0;
+        }
+        
+        .sort-select {
+            font-size: 13px;
+            padding: 6px 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+        
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        
+        .project-card {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid #27ae60;
+        }
+        
+        .project-card:hover {
+            background: #f5f5f5;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .project-card.warning {
+            border-left-color: #f39c12;
+        }
+        
+        .project-card.over {
+            border-left-color: #e74c3c;
+        }
+        
+        .project-card h3 {
+            font-size: 13px;
+            font-weight: 500;
+            margin: 0 0 8px 0;
+            color: #1a1a1a;
+        }
+        
+        .project-card .meta {
+            font-size: 12px;
+            color: #666;
+            margin: 0 0 12px 0;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #27ae60;
+            transition: width 0.3s;
+        }
+        
+        .progress-fill.warning {
+            background: #f39c12;
+        }
+        
+        .progress-fill.over {
+            background: #e74c3c;
+        }
+        
+        .project-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+        
+        .project-stats .percent {
+            font-size: 18px;
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+        
+        .project-stats .value {
+            font-size: 11px;
+            color: #666;
+        }
+        
+        table {
+            width: 100%;
+            font-size: 13px;
+            border-collapse: collapse;
+        }
+        
+        th {
+            text-align: left;
+            padding: 12px 0;
+            color: #666;
+            font-weight: 500;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        td {
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        tr:hover {
+            background: #f9f9f9;
+            cursor: pointer;
+        }
+        
+        .center {
+            text-align: center;
+        }
+        
+        .right {
+            text-align: right;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .status-badge.healthy {
+            background: #f0f8f0;
+            color: #27ae60;
+        }
+        
+        .status-badge.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-badge.over {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            
+            .upload-fields {
+                flex-direction: column;
+            }
+            
+            .upload-field {
+                min-width: unset;
+            }
+            
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            table {
+                font-size: 12px;
+            }
+            
+            th, td {
+                padding: 8px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Project Burn-up Dashboard</h1>
+
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <h2>Load Your Data</h2>
+            <div class="upload-fields">
+                <div class="upload-field">
+                    <label for="harvest-file">Harvest Project List (CSV)</label>
+                    <input type="file" id="harvest-file" accept=".csv" />
+                    <small>Ensure "Project Code" column has P-xxx codes</small>
+                </div>
+                <div class="upload-field">
+                    <label for="projects-file">Projects File (CSV)</label>
+                    <input type="file" id="projects-file" accept=".csv" />
+                </div>
+                <div class="upload-field">
+                    <label for="invoice-file">Payments/Invoices (CSV)</label>
+                    <input type="file" id="invoice-file" accept=".csv" />
+                    <small>Optional: Extracts [P-xxx] from Payment Terms</small>
+                </div>
+            </div>
+            <div id="message"></div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div id="summary-section" style="display: none;">
+            <div class="summary-cards">
+                <div class="summary-card">
+                    <p>Total Projects</p>
+                    <p id="total-projects">0</p>
+                </div>
+                <div class="summary-card">
+                    <p>Total Budget</p>
+                    <p id="total-budget">$0K</p>
+                </div>
+                <div class="summary-card">
+                    <p>Budget Spent</p>
+                    <p id="total-spent">$0K</p>
+                </div>
+                <div class="summary-card">
+                    <p>Revenue at Risk</p>
+                    <p id="revenue-at-risk">$0K</p>
+                </div>
+                <div class="summary-card">
+                    <p>At Risk</p>
+                    <p id="at-risk">0</p>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-button active" data-tab="overview">All Projects Overview</button>
+                <button class="tab-button" data-tab="risk">⚠️ At Risk</button>
+            </div>
+
+            <!-- Overview Section -->
+            <div id="overview" class="section active">
+                <div class="section-header">
+                    <h2>All Projects at a Glance</h2>
+                    <select class="sort-select" id="overview-sort">
+                        <option value="consumed-desc">Highest budget consumption first</option>
+                        <option value="revenue-risk">Most revenue at risk</option>
+                        <option value="invoiced-asc">Lowest invoiced %</option>
+                        <option value="name">Alphabetical</option>
+                    </select>
+                </div>
+                <div class="projects-grid" id="overview-grid"></div>
+            </div>
+
+            <!-- Risk Section -->
+            <div id="risk" class="section">
+                <h2>⚠️ Projects at Risk</h2>
+                <div style="overflow-x: auto; margin-top: 1.5rem;">
+                    <table id="risk-table">
+                        <thead>
+                            <tr>
+                                <th>Project</th>
+                                <th>Stage</th>
+                                <th class="center">Budget</th>
+                                <th class="center">Spent</th>
+                                <th class="center">Invoiced</th>
+                                <th class="right">Revenue at Risk</th>
+                                <th class="center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="risk-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="empty-state">
+            Upload your CSV files above to get started
+        </div>
+    </div>
+
+    <script>
+        let harvestData = null;
+        let projectsData = null;
+        let invoiceData = null;
+        let activeProjects = [];
+
+        // File upload handlers
+        document.getElementById('harvest-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                harvestData = parseCSV(event.target.result);
+                updateDashboard();
+            };
+            reader.readAsText(file);
+        });
+
+        document.getElementById('projects-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                projectsData = parseCSV(event.target.result);
+                updateDashboard();
+            };
+            reader.readAsText(file);
+        });
+
+        document.getElementById('invoice-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                invoiceData = parseCSV(event.target.result);
+                updateDashboard();
+            };
+            reader.readAsText(file);
+        });
+
+        function parseCSV(csv) {
+            const lines = csv.split('\n');
+            const headers = parseCSVLine(lines[0]);
+            const data = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                const values = parseCSVLine(lines[i]);
+                const obj = {};
+                headers.forEach((header, idx) => {
+                    obj[header] = values[idx] || '';
+                });
+                data.push(obj);
+            }
+            return data;
+        }
+
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim().replace(/^"|"$/g, ''));
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current.trim().replace(/^"|"$/g, ''));
+            return result;
+        }
+
+        function updateDashboard() {
+            if (!harvestData || !projectsData) {
+                showMessage(`Loaded: ${harvestData ? 'Harvest ✓' : 'Harvest ✗'} | ${projectsData ? 'Projects ✓' : 'Projects ✗'} | ${invoiceData ? 'Invoices ✓' : 'Invoices ✗'}`, 'warning');
+                return;
+            }
+
+            // Filter active projects
+            activeProjects = projectsData
+                .filter(p => p['Archived']?.toLowerCase() !== 'true' && p['Created Date'])
+                .map(proj => {
+                    const projectCode = proj['Number']?.trim() || '';
+                    const harvested = harvestData.find(h => h['Project Code']?.trim() === projectCode);
+                    
+                    if (!harvested) return null;
+
+                    const createdDate = new Date(proj['Created Date']);
+                    const budget = parseFloat(harvested['Budget']?.replace(/,/g, '')) || parseFloat(proj['Price']) || 0;
+                    const budgetSpent = parseFloat(harvested['Budget Spent']?.replace(/,/g, '')) || 0;
+                    
+                    // Calculate invoiced total from invoice CSV if available
+                    let invoicedTotal = 0;
+                    if (invoiceData && invoiceData.length > 0) {
+                        invoicedTotal = invoiceData
+                            .filter(inv => {
+                                const paymentTerms = inv['Payment Terms'] || '';
+                                const match = paymentTerms.match(/\[P-(\d+)\]/);
+                                return match && `P-${match[1]}` === projectCode;
+                            })
+                            .reduce((sum, inv) => {
+                                const paidAmount = parseFloat(inv['Paid Amount']?.replace(/,/g, '')) || 
+                                                  parseFloat(inv['Amount']?.replace(/,/g, '')) || 0;
+                                return sum + paidAmount;
+                            }, 0);
+                    }
+
+                    const consumedPercent = budget > 0 ? (budgetSpent / budget) * 100 : 0;
+                    const invoicedPercent = budgetSpent > 0 ? (invoicedTotal / budgetSpent) * 100 : 100;
+                    const revenueAtRisk = budgetSpent - invoicedTotal;
+
+                    // Determine risk status based on revenue collected vs work performed
+                    let status = 'healthy';
+                    if (consumedPercent > 100) {
+                        status = 'over';
+                    } else if (invoicedPercent < 50) {
+                        status = 'over'; // Less than 50% invoiced
+                    } else if (invoicedPercent < 100) {
+                        status = 'warning'; // 50-100% invoiced
+                    } else {
+                        status = 'healthy'; // 100% invoiced
+                    }
+
+                    return {
+                        id: projectCode,
+                        name: proj['Name'],
+                        client: proj['Account'],
+                        stage: proj['Stage'],
+                        budget: Math.round(budget * 100) / 100,
+                        budgetSpent: Math.round(budgetSpent * 100) / 100,
+                        invoicedAmount: Math.round(invoicedTotal * 100) / 100,
+                        revenueAtRisk: Math.round(revenueAtRisk * 100) / 100,
+                        consumedPercent: Math.round(consumedPercent * 10) / 10,
+                        invoicedPercent: Math.round(invoicedPercent * 10) / 10,
+                        status
+                    };
+                })
+                .filter(p => p !== null);
+
+            if (activeProjects.length === 0) {
+                showMessage('No projects matched. Verify Project Code matches between CSVs.', 'warning');
+                return;
+            }
+
+            showMessage(`✓ Loaded: ${activeProjects.length} projects${invoiceData ? ' + invoices' : ''}`, 'success');
+            renderDashboard();
+        }
+
+        function renderDashboard() {
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('summary-section').style.display = 'block';
+
+            // Update summary cards
+            const totalBudget = activeProjects.reduce((sum, p) => sum + p.budget, 0);
+            const totalSpent = activeProjects.reduce((sum, p) => sum + p.budgetSpent, 0);
+            const totalRevenueAtRisk = activeProjects.reduce((sum, p) => sum + p.revenueAtRisk, 0);
+            const riskCount = activeProjects.filter(p => p.status !== 'healthy').length;
+
+            document.getElementById('total-projects').textContent = activeProjects.length;
+            document.getElementById('total-budget').textContent = `$${(totalBudget / 1000).toFixed(0)}K`;
+            document.getElementById('total-spent').textContent = `$${(totalSpent / 1000).toFixed(0)}K`;
+            document.getElementById('revenue-at-risk').textContent = `$${(totalRevenueAtRisk / 1000).toFixed(0)}K`;
+            document.getElementById('at-risk').textContent = riskCount;
+
+            renderOverview();
+            renderRiskTable();
+        }
+
+        function renderOverview() {
+            const sorted = [...activeProjects].sort((a, b) => b.consumedPercent - a.consumedPercent);
+            const grid = document.getElementById('overview-grid');
+            grid.innerHTML = '';
+
+            sorted.forEach(proj => {
+                const card = document.createElement('div');
+                card.className = `project-card ${proj.status}`;
+                card.innerHTML = `
+                    <h3>${proj.name}</h3>
+                    <div class="meta">${proj.client} • ${proj.stage}</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill ${proj.status}" style="width: ${Math.min(proj.consumedPercent, 100)}%"></div>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #666; margin-bottom: 4px;">
+                            <span>Budget Spent:</span>
+                            <span style="font-weight: 500; color: #1a1a1a;">${proj.consumedPercent}%</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #666;">
+                            <span>Invoiced:</span>
+                            <span style="font-weight: 500; color: ${proj.status !== 'healthy' ? '#f39c12' : '#27ae60'};">${proj.invoicedPercent}%</span>
+                        </div>
+                    </div>
+                    <div class="project-stats">
+                        <span class="value">Revenue at Risk: <strong>$${(proj.revenueAtRisk / 1000).toFixed(0)}K</strong></span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderRiskTable() {
+            const riskProjects = activeProjects.filter(p => p.status !== 'healthy').sort((a, b) => b.revenueAtRisk - a.revenueAtRisk);
+            const tbody = document.getElementById('risk-tbody');
+            tbody.innerHTML = '';
+
+            riskProjects.forEach(proj => {
+                const row = tbody.insertRow();
+                const statusClass = proj.status === 'over' ? 'over' : 'warning';
+                const statusText = proj.status === 'over' ? '🔴 Critical' : '🟡 Warning';
+                row.innerHTML = `
+                    <td><strong>${proj.name}</strong></td>
+                    <td>${proj.stage}</td>
+                    <td class="center">$${(proj.budget / 1000).toFixed(0)}K</td>
+                    <td class="center">$${(proj.budgetSpent / 1000).toFixed(0)}K</td>
+                    <td class="center">$${(proj.invoicedAmount / 1000).toFixed(0)}K</td>
+                    <td class="right" style="color: #e74c3c; font-weight: 500;">$${(proj.revenueAtRisk / 1000).toFixed(0)}K</td>
+                    <td class="center">
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                    </td>
+                `;
+            });
+        }
+
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = `message ${type}`;
+        }
+
+        // Tab switching
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.getAttribute('data-tab');
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                document.getElementById(tab).classList.add('active');
+                document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        // Sort handlers
+        document.getElementById('overview-sort').addEventListener('change', (e) => {
+            const sorted = [...activeProjects];
+            if (e.target.value === 'revenue-risk') {
+                sorted.sort((a, b) => b.revenueAtRisk - a.revenueAtRisk);
+            } else if (e.target.value === 'invoiced-asc') {
+                sorted.sort((a, b) => a.invoicedPercent - b.invoicedPercent);
+            } else if (e.target.value === 'name') {
+                sorted.sort((a, b) => a.name.localeCompare(b.name));
+            } else {
+                sorted.sort((a, b) => b.consumedPercent - a.consumedPercent);
+            }
+            activeProjects = sorted;
+            renderOverview();
+        });
+    </script>
+</body>
+</html>
